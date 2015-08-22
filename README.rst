@@ -12,10 +12,11 @@ Usage
 -----
 
 ::
+
   In [1]: from subframe import DataTable, PivotTable
           import subframe
           subframe.plugins.enable()
-
+  
   In [2]: import pandas
 
           d = pandas.DataFrame({
@@ -26,6 +27,6 @@ Usage
   
   In [3]: DataTable(d)
   Out[3]: ...
-
+  
   In [4]: PivotTable(d)
   Out[4]: ...
