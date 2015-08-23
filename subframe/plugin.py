@@ -74,29 +74,33 @@ class Plugin:
 
         # load css
         if self.css:
-            display(HTML('\n'.join(
+            display(Javascript("$('head').append('{}');".format(' '.join(
                 '<link rel="stylesheet" href="{}" />'.format(self._url(path))
                 for path in self.css
-            )))
+            ))))
 
         # register JS requirements
         config_data = {
             'paths': {self.name: self._url(os.path.splitext(self.main)[0])},
             'shim': {self.name: {'deps': self.deps}},
         }
+
+        # register ancillary supporting scripts/modules
+        js = [self._url(path) for path in self.js]
+        if self.js:
+            config_data['shim'].update({
+                path: {'deps': [self.name] + self.deps}
+                for path in js
+            })
+
         display(Javascript('require.config({});'.format(json.dumps(config_data))))
 
-        # initialise supporting scripts
-        js = [self._url(path) for path in self.js]
-        if js:
-            config_data = {'shim': {path: ([self.name] + self.deps) for path in js}}
-            display(Javascript('require.config({});'.format(json.dumps(config_data))))
-
-        if self.init:
+        # run initialisation (might be a hack? couldn't get init in requireJS working)
+        if self.init or self.js:
             display(Javascript("require([{deps}], function({args}) {{ {init} }});".format(
                 deps=', '.join("'{}'".format(dep) for dep in ([self.name] + self.deps + js)),
                 args=', '.join([self.name] + self.deps),
-                init=self.init
+                init=self.init if self.init else ''
             )))
 
     def _external(self, x):
@@ -203,13 +207,13 @@ plugins = PluginManager(
     Plugin('c3', main='c3.min.js', deps=['d3']),
     Plugin(
         'pivot', main='pivot.min.js',
-        js=['d3_renderers.min.js', 'c3_renderers.js', 'export_renderers.min.js'],
+        js=['d3_renderers.min.js', 'c3_renderers.min.js', 'export_renderers.min.js'],
         deps=['jquery', 'jqueryui', 'd3', 'c3'],
         init="""\
 $.pivotUtilities.renderers = $.extend(
   $.pivotUtilities.renderers,
   $.pivotUtilities.d3_renderers, $.pivotUtilities.c3_renderers,
   $.pivotUtilities.export_renderers
-);"""
+);"""  # monkey-patch all the renderers!
     ),
 )
