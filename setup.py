@@ -20,6 +20,9 @@ data_files = [
     ('static/d3/js', ['libs/d3/d3.min.js']),
     ('static/d3/css', []),
     ('static/d3/images', []),
+    ('static/c3/js', ['libs/c3/c3.min.js']),
+    ('static/c3/css', ['libs/c3/c3.min.css']),
+    ('static/c3/images', []),
 ]
 
 

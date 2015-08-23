@@ -7,3 +7,6 @@
 [submodule "libs/d3"]
 	path = libs/d3
 	url = git@github.com:mbostock/d3.git
+[submodule "libs/c3"]
+	path = libs/c3
+	url = git@github.com:masayuki0812/c3.git

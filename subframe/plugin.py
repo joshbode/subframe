@@ -6,6 +6,7 @@ import json
 import os.path
 import shutil
 import re
+from collections import OrderedDict
 
 import pkg_resources
 from IPython.display import display, Javascript, HTML
@@ -20,9 +21,12 @@ class Plugin:
     _base = 'nbextensions/subframe'
     _cdn_re = re.compile(r'(https?:)?//')
 
-    def __init__(self, name, js=None, css=None, images=None, deps=None, init=None):
+    def __init__(self, name, main, js=None, css=None, images=None,
+                 deps=None, init=None):
 
         self.name = name
+
+        self.main = self._paths('js', [main])[0]
 
         # convert into lists any single arguments
         if isinstance(js, basestring):
@@ -34,7 +38,7 @@ class Plugin:
         if isinstance(deps, basestring):
             deps = [deps]
 
-        self.js = self._paths('js', js)
+        self.js = [x for x in self._paths('js', js) if x != self.main]
         self.css = self._paths('css', css)
         self.images = self._paths('images', images)
 
@@ -45,7 +49,7 @@ class Plugin:
         """Install the plugin."""
 
         # copy resources to nbextensions
-        for resource in self.js + self.css + self.images:
+        for resource in [self.main] + self.js + self.css + self.images:
             if self._external(resource):
                 continue
 
@@ -57,36 +61,42 @@ class Plugin:
             resource = pkg_resources.resource_filename(self._req, resource)
             shutil.copy(resource, dest)
 
+    def _url(self, path):
+        """Convert to url path."""
+
+        if self._external(path):
+            return path
+
+        return '/' + os.path.join(self._base, path).replace(os.path.sep, '/')
+
     def enable(self):
         """Activate the plugin."""
 
         # load css
-        display(HTML('\n'.join(
-            '<link rel="stylesheet" href="/{}" />'.format(
-                path if self._external(path) else
-                os.path.join(self._base, path).replace(os.path.sep, '/')
-            )
-            for path in self.css
-        )))
+        if self.css:
+            display(HTML('\n'.join(
+                '<link rel="stylesheet" href="{}" />'.format(self._url(path))
+                for path in self.css
+            )))
 
         # register JS requirements
-        config_data = json.dumps({
-            'paths': {self.name: [
-                os.path.splitext(
-                    path if self._external(path) else
-                    '/' + os.path.join(self._base, path).replace(os.path.sep, '/')
-                )[0]
-                for path in self.js
-            ]},
-            'shim': {self.name: self.deps},
-        })
-        display(Javascript('require.config({});'.format(config_data)))
+        config_data = {
+            'paths': {self.name: self._url(os.path.splitext(self.main)[0])},
+            'shim': {self.name: {'deps': self.deps}},
+        }
+        display(Javascript('require.config({});'.format(json.dumps(config_data))))
 
-        # run initialisation code for plugin if any
+        # initialise supporting scripts
+        js = [self._url(path) for path in self.js]
+        if js:
+            config_data = {'shim': {path: ([self.name] + self.deps) for path in js}}
+            display(Javascript('require.config({});'.format(json.dumps(config_data))))
+
         if self.init:
-            plugins = ', '.join("'{}'".format(plugin) for plugin in [self.name] + self.deps)
-            display(Javascript("require([{plugins}], function() {{ {init} }});".format(
-                plugins=plugins, init=self.init
+            display(Javascript("require([{deps}], function({args}) {{ {init} }});".format(
+                deps=', '.join("'{}'".format(dep) for dep in ([self.name] + self.deps + js)),
+                args=', '.join([self.name] + self.deps),
+                init=self.init
             )))
 
     def _external(self, x):
@@ -149,10 +159,10 @@ class Plugin:
 class PluginManager(object):
     """Class to manage plugins."""
 
-    def __init__(self, **plugins):
+    def __init__(self, *plugins):
         """Iniitialise the plugin manager."""
 
-        self._plugins = plugins
+        self._plugins = OrderedDict((plugin.name, plugin) for plugin in plugins)
 
     def __getattr__(self, name):
         """Get attribute, try plugin name."""
@@ -186,9 +196,20 @@ class PluginManager(object):
 
 
 # setup plugins under the manager
+# Plugin('google', js='//www.google.com/jsapi', init="google.load('visualization', '1.0', {'packages': ['corechart', 'charteditor']});"),
 plugins = PluginManager(
-    # google=Plugin('google', js='//www.google.com/jsapi', init="google.load('visualization', '1.0', {'packages': ['corechart', 'charteditor']});"),
-    datatables=Plugin('datatables', js='jquery.dataTables.min.js', deps='jquery'),
-    d3=Plugin('d3', js='d3.min.js'),
-    pivot=Plugin('pivot', js='pivot.min.js', deps=['jquery', 'jqueryui']),
+    Plugin('datatables', main='jquery.dataTables.min.js', deps='jquery'),
+    Plugin('d3', main='d3.min.js'),
+    Plugin('c3', main='c3.min.js', deps=['d3']),
+    Plugin(
+        'pivot', main='pivot.min.js',
+        js=['d3_renderers.min.js', 'c3_renderers.js', 'export_renderers.min.js'],
+        deps=['jquery', 'jqueryui', 'd3', 'c3'],
+        init="""\
+$.pivotUtilities.renderers = $.extend(
+  $.pivotUtilities.renderers,
+  $.pivotUtilities.d3_renderers, $.pivotUtilities.c3_renderers,
+  $.pivotUtilities.export_renderers
+);"""
+    ),
 )

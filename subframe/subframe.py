@@ -12,23 +12,25 @@ class SubFrame(Javascript):
 
     _plugins = []
 
-    def __init__(self, data, columns=None, opts=None):
+    def __init__(self, data, labels=None, options=None):
         """Initialise SubFrame."""
 
-        self._columns = columns if columns else {}
-        plugins = ', '.join("'{}'".format(plugin.name) for plugin in self._plugins)
-        data = "require([{plugins}], function() {{ {js} }});".format(
-            plugins=plugins, js=self._js(data)
+        self._labels = labels if labels else {}
+        self._options = options if options else {}
+        data = "require([{plugins}], function({args}) {{ {js} }});".format(
+            plugins=', '.join("'{}'".format(plugin.name) for plugin in self._plugins),
+            args=', '.join(plugin.name for plugin in self._plugins),
+            js=self._js(data)
         )
         super(SubFrame, self).__init__(data)
 
     def _map_columns(self, columns):
         """Map column labels."""
 
-        if not self._columns:
+        if not self._labels:
             return columns
 
-        return [self._columns.get(x, x) for x in columns]
+        return [self._labels.get(x, x) for x in columns]
 
     def _js(self, data):
         """Javascript callback body."""

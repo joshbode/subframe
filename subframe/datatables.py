@@ -18,7 +18,7 @@ class DataTable(SubFrame):
         data = self._json({
             'data': data.tolist(),
             'columns': [
-                {'title:': x} for x in self._map_columns(data.dtype.names)
+                {'title': x} for x in self._map_columns(data.dtype.names)
             ]
         })
 
