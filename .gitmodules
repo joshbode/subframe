@@ -1,6 +1,6 @@
 [submodule "libs/pivottable"]
 	path = libs/pivottable
-	url = git@github.com:nicolaskruchten/pivottable.git
+	url = git@github.com:joshbode/pivottable.git
 [submodule "libs/DataTables"]
 	path = libs/DataTables
 	url = git@github.com:DataTables/DataTables.git
