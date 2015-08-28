@@ -95,7 +95,7 @@ class Plugin:
 
         display(Javascript('require.config({});'.format(json.dumps(config_data))))
 
-        # run initialisation (might be a hack? couldn't get init in requireJS working)
+        # run initialisation (might be a hack?)
         if self.init or self.js:
             display(Javascript("require([{deps}], function({args}) {{ {init} }});".format(
                 deps=', '.join("'{}'".format(dep) for dep in ([self.name] + self.deps + js)),
