@@ -43,3 +43,4 @@ docs/_build/
 
 # static dir
 static
+examples/.ipynb_checkpoints/*
