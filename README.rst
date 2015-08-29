@@ -3,7 +3,7 @@
 SubFrame
 --------
 
-DataFrame-friendly jQuery Plugins for `Jupyter Notebook <http:///>`_:
+DataFrame-friendly jQuery Plugins for `Jupyter Notebook <http://jupyter.org/>`_:
 
 - `DataTables <https://github.com/DataTables/DataTables/>`_
 - `PivotTable.js <https://github.com/nicolaskruchten/pivottable/>`_
