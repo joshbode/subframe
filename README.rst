@@ -3,10 +3,28 @@
 SubFrame
 --------
 
-jQuery Plugins:
+DataFrame-friendly jQuery Plugins for `Jupyter Notebook <http:///>`_:
 
 - `DataTables <https://github.com/DataTables/DataTables/>`_
 - `PivotTable.js <https://github.com/nicolaskruchten/pivottable/>`_
+
+Installation
+------------
+
+To install `subframe`:
+
+::
+
+  $ git clone --recursive git@github.com:joshbode/subframe.git
+  $ cd subframe
+  $ pip install .
+
+To install `subframe` in development (editable) mode:
+
+::
+
+  $ pip install -e .
+
 
 Usage
 -----
