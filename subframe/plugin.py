@@ -9,9 +9,16 @@ import re
 from collections import OrderedDict
 
 import pkg_resources
-from IPython.display import display, Javascript, HTML
+from IPython.display import display, Javascript
 
 from .error import SubFrameError
+
+
+def isiterable(x):
+    """Determine if object is iterable."""
+
+    # good enough, don't want to match strings
+    return isinstance(x, (list, tuple))
 
 
 class Plugin:
@@ -28,14 +35,14 @@ class Plugin:
 
         self.main = self._paths('js', [main])[0]
 
-        # convert into lists any single arguments
-        if isinstance(js, basestring):
+        # convert any single arguments into lists
+        if js is not None and not isiterable(js):
             js = [js]
-        if isinstance(css, basestring):
+        if css is not None and not isiterable(css):
             css = [css]
-        if isinstance(images, basestring):
+        if images is not None and not isiterable(images):
             images = [images]
-        if isinstance(deps, basestring):
+        if deps is not None and not isiterable(deps):
             deps = [deps]
 
         self.js = [x for x in self._paths('js', js) if x != self.main]
@@ -202,7 +209,7 @@ class PluginManager(object):
 # setup plugins under the manager
 # Plugin('google', js='//www.google.com/jsapi', init="google.load('visualization', '1.0', {'packages': ['corechart', 'charteditor']});"),
 plugins = PluginManager(
-    Plugin('datatables', main='jquery.dataTables.min.js', deps='jquery'),
+    Plugin('datatables', main='jquery.dataTables.min.js', deps=['jquery']),
     Plugin('d3', main='d3.min.js'),
     Plugin('c3', main='c3.min.js', deps=['d3']),
     Plugin(
