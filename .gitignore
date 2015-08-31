@@ -42,5 +42,5 @@ coverage.xml
 docs/_build/
 
 # static dir
-static
+subframe/static
 examples/.ipynb_checkpoints/*

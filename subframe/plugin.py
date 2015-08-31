@@ -25,7 +25,7 @@ class Plugin:
     """Plugin Loader."""
 
     _req = pkg_resources.Requirement.parse('subframe')
-    _base = 'nbextensions/subframe'
+    _base = 'nbextensions'
     _cdn_re = re.compile(r'(https?:)?//')
 
     def __init__(self, name, main, js=None, css=None, images=None,
@@ -128,7 +128,7 @@ class Plugin:
     def _paths(self, kind, filter=None):
         """Get resource names."""
 
-        root = os.path.join('static', self.name, kind)
+        root = os.path.join('subframe/static', self.name, kind)
 
         if filter is not None:
             # split into internal and external resources
