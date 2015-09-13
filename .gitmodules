@@ -10,3 +10,6 @@
 [submodule "libs/pivottable"]
 	path = libs/pivottable
 	url = git@github.com:nicolaskruchten/pivottable.git
+[submodule "libs/selectize.js"]
+	path = libs/selectize.js
+	url = git@github.com:brianreavis/selectize.js.git
