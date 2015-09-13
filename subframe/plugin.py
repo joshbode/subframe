@@ -10,6 +10,7 @@ from collections import OrderedDict
 
 import pkg_resources
 from IPython.display import display, Javascript
+import ipywidgets
 
 from .error import SubFrameError
 
@@ -106,7 +107,9 @@ class Plugin:
         if self.init or self.js:
             display(Javascript("require([{deps}], function({args}) {{ {init} }});".format(
                 deps=', '.join("'{}'".format(dep) for dep in ([self.name] + self.deps + js)),
-                args=', '.join([self.name] + self.deps),
+                args=', '.join(
+                    [self.name] + [dep.split('/')[-1] for dep in self.deps]
+                ),
                 init=self.init if self.init else ''
             )))
 
@@ -207,8 +210,37 @@ class PluginManager(object):
 
 
 # setup plugins under the manager
-# Plugin('google', js='//www.google.com/jsapi', init="google.load('visualization', '1.0', {'packages': ['corechart', 'charteditor']});"),
 plugins = PluginManager(
+    Plugin(
+        'selectize', main='selectize.min.js',
+        deps=['jquery', 'nbextensions/widgets/widgets/js/manager', 'nbextensions/widgets/widgets/js/widget_selection'],
+        init="""\
+var SelectizeView = widget_selection.SelectMultipleView.extend({
+  render: function() {
+    this.$el.addClass('widget-hbox widget-selectize');
+    this.$label = $('<label />').appendTo(this.$el)
+      .addClass('widget-label')
+      .attr('for', 'input-selectize')
+      .hide();
+    this.$listbox = $('<select />').appendTo(this.$el)
+      .addClass('widget-listbox')
+      .attr('id', 'input-selectize').attr('multiple', true)
+      .on('change', $.proxy(this.handle_change, this));
+    this.update();
+  },
+
+  update: function(options) {
+    SelectizeView.__super__.update.apply(this);
+    this.$listbox.selectize({
+      create: this.model.get('create'),
+      createFilter: this.model.get('createFilter') || null,
+      persist: this.model.get('persist'),
+      maxItems: this.model.get('maxItems') || null
+    });
+  }
+});
+manager.WidgetManager.register_widget_view('SelectizeView', SelectizeView);"""
+    ),
     Plugin('datatables', main='jquery.dataTables.min.js', deps=['jquery']),
     Plugin('d3', main='d3.min.js'),
     Plugin('c3', main='c3.min.js', deps=['d3']),
@@ -219,8 +251,7 @@ plugins = PluginManager(
         init="""\
 $.pivotUtilities.renderers = $.extend(
   $.pivotUtilities.renderers,
-  $.pivotUtilities.d3_renderers, $.pivotUtilities.c3_renderers,
-  $.pivotUtilities.export_renderers
+  $.pivotUtilities.d3_renderers, $.pivotUtilities.c3_renderers, $.pivotUtilities.export_renderers
 );"""  # monkey-patch all the renderers!
     ),
 )
